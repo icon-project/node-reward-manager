@@ -1,0 +1,14 @@
+services:
+  node-reward-manager:
+    container_name: node-reward-manager
+    build:
+      context: ./
+    restart: always
+    environment:
+      PRIVATE_KEY: ${PRIVATE_KEY}
+      RECEIVER_ADDRESS: ${RECEIVER_ADDRESS}
+      NETWORK: ${NETWORK}
+
+    # mount logs directory to allow for log access
+    volumes:
+      - ./logs:/app/logs

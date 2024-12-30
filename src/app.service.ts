@@ -16,7 +16,7 @@ import {
 export class AppService {
   private logger = new Logger(AppService.name);
 
-  @Cron('45 * * * * *')
+  @Cron('0 * * * *')
   async cronJob() {
     try {
       // first validate the configs

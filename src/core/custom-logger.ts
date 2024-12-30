@@ -42,7 +42,7 @@ export class Logging {
     );
 
     this.createLoggerConfig = {
-      level: 'warn', // this will print warn and above level (error also)
+      level: 'info', // this will print warn and above level (error also)
       format: winston.format.combine(
         // winston.format.colorize(),
         winston.format.splat(),
