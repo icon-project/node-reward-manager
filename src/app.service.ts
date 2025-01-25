@@ -10,11 +10,13 @@ import {
   sleep,
   getReceiverAddress,
   sendIcxTransaction,
+  getTransactionResult,
 } from './utils/util';
 
 @Injectable()
 export class AppService {
   private logger = new Logger(AppService.name);
+  private minimumBalance = 5;
 
   @Cron('0 * * * *')
   async cronJob() {
@@ -38,18 +40,18 @@ export class AppService {
       const parsedBalance = parseFromLoopInHex(balanceRequest.result);
 
       // Main check logic.
-      // If balance is less than 0.002 ICX then log a warning about low balance
+      // If balance is less than 10 ICX then log a warning about low balance
       // if the claimable iscore is greater than 0 then
       // Claim the iscore
       // wait for 5 seconds
       // get the new balance
-      // If the balance is less than 1 ICX then log a warning about low balance and finish the cron job
-      // If the balance is greater than 1 ICX then log a success message
+      // If the balance is less than 5 ICX then log a warning about low balance and finish the cron job
+      // If the balance is greater than 5 ICX then log a success message
       // Make the transaction to transfer all balance minus
-      // 1 ICX to the wallet receiver
+      // 5 ICX to the wallet receiver
       // Log the success message and finish the cron job
       //
-      if (parsedBalance < 0.002) {
+      if (parsedBalance < this.minimumBalance * 2) {
         this.logger.warn({
           level: 'warn',
           message: `Low balance: ${parsedBalance}`,
@@ -63,6 +65,7 @@ export class AppService {
           message: `Claiming iScore for an estimated ICX: ${parsedEstimatedICX}`,
         });
         const claimResponse = await claimIscoreTransaction(wallet);
+        await getTransactionResult(claimResponse);
         this.logger.log({
           level: 'info',
           message: `Claimed iScore with txHash of: ${claimResponse}`,
@@ -85,7 +88,7 @@ export class AppService {
         message: `New balance: ${newParsedBalance}`,
       });
 
-      if (newParsedBalance < 1) {
+      if (newParsedBalance < this.minimumBalance) {
         this.logger.warn({
           level: 'warn',
           message: `Low balance: ${newParsedBalance}. Halting the cron job.`,
@@ -94,7 +97,8 @@ export class AppService {
       }
 
       // transfer the balance
-      const amountToTransfer = newParsedBalance - 1;
+      // const amountToTransfer = newParsedBalance - this.minimumBalance;
+      const amountToTransfer = this.minimumBalance;
       const receiverAddress = getReceiverAddress();
       this.logger.log({
         level: 'info',
@@ -106,16 +110,18 @@ export class AppService {
         amountToTransfer,
         receiverAddress,
       );
+      await getTransactionResult(txHash);
       this.logger.log({
         level: 'info',
         message: `Transaction successful with txHash: ${txHash}. Finished the cron job.`,
       });
     } catch (err) {
       // log the error
+      const errString = JSON.stringify(err);
       this.logger.error({
         level: 'error',
-        message: `Error in cronJob: ${err.message}`,
-        error: err,
+        message: `Error in cronJob: ${err}`,
+        error: errString,
       });
     }
   }
