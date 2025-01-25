@@ -67,7 +67,7 @@ export async function sendIcxTransaction(
       .from(wallet.getAddress())
       .to(receiver)
       .value(IconConverter.toHex(value * 10 ** 18))
-      .stepLimit(IconConverter.toHex(1000000))
+      .stepLimit(IconConverter.toHex(100000000))
       .nid(config[config.env.network].nid)
       .nonce(IconConverter.toHex(1))
       .version(IconConverter.toHex(3))
@@ -84,6 +84,35 @@ export async function sendIcxTransaction(
       error: err,
     });
     throw new Error('Failed to send ICX');
+  }
+}
+
+export async function getTransactionResult(txHash: string) {
+  try {
+    const maxLoops = 11;
+    let loop = 0;
+    const service = getService();
+
+    while (loop < maxLoops) {
+      loop++;
+      try {
+        return await service.getTransactionResult(txHash).execute();
+      } catch (err) {
+        const errString = JSON.stringify(err);
+        logger.log({
+          level: 'info',
+          message: errString,
+        });
+        await sleep(1000);
+      }
+    }
+  } catch (err) {
+    logger.log({
+      level: 'error',
+      message: err.message,
+      error: err,
+    });
+    throw new Error('Failed to get transaction result');
   }
 }
 
