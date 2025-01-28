@@ -97,8 +97,7 @@ export class AppService {
       }
 
       // transfer the balance
-      // const amountToTransfer = newParsedBalance - this.minimumBalance;
-      const amountToTransfer = this.minimumBalance;
+      const amountToTransfer = newParsedBalance - this.minimumBalance;
       const receiverAddress = getReceiverAddress();
       this.logger.log({
         level: 'info',
